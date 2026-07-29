@@ -53,7 +53,15 @@ _UPSTREAM: dict[str, str] = {
     "groq":      os.environ.get("GROQ_BASE_URL",      "https://api.groq.com/openai").rstrip("/"),
     "gemini":    os.environ.get("GEMINI_BASE_URL",    "https://generativelanguage.googleapis.com/v1beta/openai").rstrip("/"),
     "moonshot":  os.environ.get("MOONSHOT_BASE_URL",  "https://api.moonshot.cn/v1").rstrip("/"),
+    "deepseek":  os.environ.get("DEEPSEEK_BASE_URL",  "https://api.deepseek.com/v1").rstrip("/"),
+    "mistral":   os.environ.get("MISTRAL_BASE_URL",   "https://api.mistral.ai/v1").rstrip("/"),
+    "xai":       os.environ.get("XAI_BASE_URL",       "https://api.x.ai/v1").rstrip("/"),
+    "together":  os.environ.get("TOGETHER_BASE_URL",  "https://api.together.xyz/v1").rstrip("/"),
+    "fireworks": os.environ.get("FIREWORKS_BASE_URL", "https://api.fireworks.ai/inference/v1").rstrip("/"),
+    "cerebras":  os.environ.get("CEREBRAS_BASE_URL",  "https://api.cerebras.ai/v1").rstrip("/"),
     "ollama":    os.environ.get("OLLAMA_BASE_URL",    "http://localhost:11434").rstrip("/"),
+    "lmstudio":  os.environ.get("LMSTUDIO_BASE_URL",  "http://localhost:1234/v1").rstrip("/"),
+    "vllm":      os.environ.get("VLLM_BASE_URL",      "http://localhost:8000/v1").rstrip("/"),
 }
 
 _KEYS: dict[str, str] = {
@@ -64,15 +72,21 @@ _KEYS: dict[str, str] = {
         "groq":      os.environ.get("GROQ_API_KEY",      ""),
         "gemini":    os.environ.get("GEMINI_API_KEY",    ""),
         "moonshot":  os.environ.get("MOONSHOT_API_KEY",  ""),
+        "deepseek":  os.environ.get("DEEPSEEK_API_KEY",  ""),
+        "mistral":   os.environ.get("MISTRAL_API_KEY",   ""),
+        "xai":       os.environ.get("XAI_API_KEY",       ""),
+        "together":  os.environ.get("TOGETHER_API_KEY",  ""),
+        "fireworks": os.environ.get("FIREWORKS_API_KEY", ""),
+        "cerebras":  os.environ.get("CEREBRAS_API_KEY",  ""),
     }.items()
     if v
 }
 
 # Providers that need no API key (local/self-hosted)
-_KEYLESS = frozenset({"ollama"})
+_KEYLESS = frozenset({"ollama", "lmstudio", "vllm"})
 
-# Anthropic uses x-api-key; OpenAI-compatible providers use Authorization: Bearer
-_OPENAI_COMPAT = frozenset({"openai", "groq", "gemini", "moonshot"})
+# Anthropic uses x-api-key; all others use Authorization: Bearer
+_OPENAI_COMPAT = frozenset({"openai", "groq", "gemini", "moonshot", "deepseek", "mistral", "xai", "together", "fireworks", "cerebras"})
 _HOP_BY_HOP = frozenset({"host", "x-api-key", "authorization", "content-length", "transfer-encoding"})
 
 _client = httpx.AsyncClient(timeout=httpx.Timeout(600.0))
