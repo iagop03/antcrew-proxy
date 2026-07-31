@@ -38,6 +38,8 @@ import hmac
 import logging
 import os
 
+__version__ = "1.0.0"
+
 import httpx
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import StreamingResponse
