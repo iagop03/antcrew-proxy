@@ -37,8 +37,9 @@ from __future__ import annotations
 import hmac
 import logging
 import os
+import time
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 import httpx
 from fastapi import FastAPI, HTTPException, Request
@@ -90,6 +91,11 @@ _KEYLESS = frozenset({"ollama", "lmstudio", "vllm"})
 # Anthropic uses x-api-key; all others use Authorization: Bearer
 _OPENAI_COMPAT = frozenset({"openai", "groq", "gemini", "moonshot", "deepseek", "mistral", "xai", "together", "fireworks", "cerebras"})
 _HOP_BY_HOP = frozenset({"host", "x-api-key", "authorization", "content-length", "transfer-encoding"})
+
+# Header names used by various providers to return a correlation/request ID.
+# These are present in response *headers* (not the body), so they are available
+# for streaming responses without buffering any content.
+_REQUEST_ID_HEADERS = ("x-request-id", "request-id", "cf-ray", "x-correlation-id")
 
 _client = httpx.AsyncClient(timeout=httpx.Timeout(600.0))
 
@@ -157,7 +163,15 @@ async def proxy(provider: str, path: str, request: Request) -> StreamingResponse
         content=await request.body(),
         params=dict(request.query_params),
     )
+    t0 = time.monotonic()
     resp = await _client.send(req, stream=True)
+    duration_ms = int((time.monotonic() - t0) * 1000)
+
+    request_id = next(
+        (resp.headers[h] for h in _REQUEST_ID_HEADERS if h in resp.headers),
+        None,
+    )
+    _log_proxy_request(provider, path, resp.status_code, duration_ms, request_id)
 
     forward_headers = {
         k: v
@@ -171,6 +185,25 @@ async def proxy(provider: str, path: str, request: Request) -> StreamingResponse
         media_type=resp.headers.get("content-type"),
         background=BackgroundTask(resp.aclose),
     )
+
+
+def _log_proxy_request(
+    provider: str,
+    path: str,
+    status: int,
+    duration_ms: int,
+    request_id: str | None,
+) -> None:
+    """Emit a structured log line per request — metadata only, no prompt/response content."""
+    rid_part = f" request_id={request_id}" if request_id else ""
+    msg = "proxy.request provider=%s path=%s status=%d duration_ms=%d%s"
+    args = (provider, path, status, duration_ms, rid_part)
+    if status >= 500:
+        log.error(msg, *args)
+    elif status >= 400:
+        log.warning(msg, *args)
+    else:
+        log.info(msg, *args)
 
 
 if __name__ == "__main__":
