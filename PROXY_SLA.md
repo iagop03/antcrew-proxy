@@ -49,6 +49,11 @@ Availability is measured as HTTP 2xx responses to the `/health` endpoint from tw
 probe locations. Periods of planned maintenance announced with adequate notice are excluded from
 availability calculations.
 
+Uptime history, active incidents, and scheduled maintenance are published at
+**[status.antcrew.org](https://status.antcrew.org)**. Customers may subscribe to incident
+notifications directly from that page. In the event of a P1 incident, antcrew will post an
+initial update to the status page within 30 minutes of detection.
+
 The **Proxy** is customer-operated and is **not included** in any antcrew uptime commitment.
 Customer is responsible for proxy availability (see Section 4).
 
